@@ -1,0 +1,24 @@
+# permissions for end users to edit quotes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: quotes-editor-role
+rules:
+- apiGroups:
+  - examples.example.com
+  resources:
+  - quotes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - examples.example.com
+  resources:
+  - quotes/status
+  verbs:
+  - get

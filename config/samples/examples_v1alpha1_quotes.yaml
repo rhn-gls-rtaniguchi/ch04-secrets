@@ -1,0 +1,9 @@
+apiVersion: examples.example.com/v1alpha1
+kind: Quotes
+metadata:
+  name: quotes-sample
+spec:
+  database_username: customuser
+  database_password: mycustom
+  database_name: testing
+  database_hostname: '{{ ansible_operator_meta.name }}-mysql'

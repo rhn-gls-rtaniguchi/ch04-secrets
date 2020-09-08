@@ -1,0 +1,5 @@
+---
+# defaults file for Quotes
+database_name: quotes
+database_password: redhat
+database_username: redhat

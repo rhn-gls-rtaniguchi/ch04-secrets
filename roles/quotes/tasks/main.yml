@@ -1,0 +1,164 @@
+---
+- name: config secret
+  community.kubernetes.k8s:
+    definition:
+        apiVersion: v1
+        stringData:
+          database: '{{ database_name }}'
+          hostname: '{{ database_hostname }}'
+          password: '{{ database_password }}'
+          user: '{{ database_username }}'
+        kind: Secret
+        metadata:
+          name: '{{ ansible_operator_meta.name }}-secrets'
+          namespace: '{{ ansible_operator_meta.namespace }}'
+        type: Opaque
+- name: start app
+  community.kubernetes.k8s:
+    definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          labels:
+            app: mysql
+          name: '{{ ansible_operator_meta.name }}-mysql'
+          namespace: '{{ ansible_operator_meta.namespace }}'
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              deployment: mysql
+          template:
+            metadata:
+              labels:
+                deployment: mysql
+            spec:
+              containers:
+              - env:
+                - name: MYSQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: password
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                - name: MYSQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: user
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                - name: MYSQL_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      key: database
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                - name: MYSQL_HOSTNAME
+                  valueFrom:
+                    secretKeyRef:
+                      key: hostname
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                image: registry.access.redhat.com/rhscl/mysql-57-rhel7
+                name: mysql
+                ports:
+                - containerPort: 3306
+                  protocol: TCP
+- name: start app
+  community.kubernetes.k8s:
+    definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          labels:
+            app: quotes
+          name: '{{ ansible_operator_meta.name }}-quotes'
+          namespace: '{{ ansible_operator_meta.namespace }}'
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              deployment: quotes
+          template:
+            metadata:
+              labels:
+                deployment: quotes
+            spec:
+              containers:
+              - env:
+                - name: QUOTES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: user
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                - name: QUOTES_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      key: database
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                - name: QUOTES_HOSTNAME
+                  valueFrom:
+                    secretKeyRef:
+                      key: hostname
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                - name: QUOTES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: password
+                      name: '{{ ansible_operator_meta.name }}-secrets'
+                image: quay.io/redhattraining/famous-quotes
+                name: quotes
+                ports:
+                - containerPort: 8000
+                  protocol: TCP
+- name: start app
+  community.kubernetes.k8s:
+    definition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          labels:
+            app: mysql
+          name: '{{ ansible_operator_meta.name }}-mysql'
+          namespace: '{{ ansible_operator_meta.namespace }}'
+        spec:
+          ports:
+          - name: 3306-tcp
+            port: 3306
+            protocol: TCP
+            targetPort: 3306
+          selector:
+            deployment: mysql
+          type: ClusterIP
+- name: start Svc
+  community.kubernetes.k8s:
+    definition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          labels:
+            app: quotes
+          name: '{{ ansible_operator_meta.name }}-quotes'
+          namespace: '{{ ansible_operator_meta.namespace }}'
+        spec:
+          ports:
+          - name: 8000-tcp
+            port: 8000
+            protocol: TCP
+            targetPort: 8000
+          selector:
+            deployment: quotes
+- name: start Svc
+  community.kubernetes.k8s:
+    definition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          labels:
+            app: mysql
+          name: '{{ ansible_operator_meta.name }}-mysql'
+          namespace: '{{ ansible_operator_meta.namespace }}'
+        spec:
+          ports:
+          - name: 3306-tcp
+            port: 3306
+            protocol: TCP
+            targetPort: 3306
+          selector:
+            deployment: mysql
