@@ -1,0 +1,48 @@
+#`Before you begin:
+# Start your crc locally
+# Login into your CRC as kubeadmin
+# Login into Quay.io with podman
+
+#Start the demo:
+mkdir ch04-secrets && cd ch04-secrets
+# Scaffold your directory structure
+operator-sdk init --plugins=ansible --domain example.com
+
+# Scaffold your CRD
+operator-sdk create api --group examples --version v1alpha1 --kind Quotes --generate-role
+
+# Open VI and update the file Dockerfile:
+:%s/docker /podman /
+:%s/kubectl /oc /
+
+# Edit the file config/rbac/role.yaml to include resources Services in the list of resources in the first list.
+# Save contents
+
+# Create a role:
+# Copy and paste the content from the project provided: in this file roles/quotes/tasks/main.yaml 
+# This was dumped using the approaches mentioned in DO288 to generate a template,from the DO280v4.2 chapter 4 - Secrets lab.
+
+# Create default values for the variables that were created in the previous step:
+# Copy and paste the content from the project provided: in this file roles/quotes/defaults/main.yaml 
+# These are the default values from the configuration.
+
+
+# Push the container image with the Ansible role into youe Quay.io account using make: 
+make docker-build docker-push IMG=quay.io/<yourQuayAccount>/nameofyourContainer
+
+# Configure the container image to be public in quay.io
+
+#Deploy your CRD
+
+make install 
+
+#Update your sample CR to support your custom values:
+#Edit the config/samples/examples*.yml to add the variables you are customizing For example, use the ones from the config/samples/examples*.yml
+
+#Deploy your resources on OpenShift
+
+make deploy IMG=quay.io/<yourQuayAccount>/nameofyourContainer
+
+# Deploy your CR using the following file:
+
+oc apply -f config/samples/examples*.yml
