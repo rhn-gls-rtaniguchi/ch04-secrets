@@ -11,7 +11,7 @@ operator-sdk init --plugins=ansible --domain example.com
 # Scaffold your CRD
 operator-sdk create api --group examples --version v1alpha1 --kind Quotes --generate-role
 
-# Open VI and update the file Dockerfile:
+# Open VI and update the file Makefile:
 :%s/docker /podman /
 :%s/kubectl /oc /
 
